@@ -241,6 +241,36 @@ function Target:draw()
     wall:pixel(floor(x-1), floor(y-1), color)
 end
 
+--------------------------------------------------------------------------------
+Enemy = Object:new()
+function Enemy:init(opts)
+    opts = opts or {}
+    self.coords = Vector(opts)
+    self.dir = Vector(opts.dir)
+    self.color = opts.color or hex(180, 0, 0)
+    self.away_color = opts.away_color or hex(60, 0, 0)
+    self.source = opts.source
+    if not self.source then
+        error("no source given")
+    end
+end
+
+function Enemy:update()
+    self.coords:add(self.dir)
+
+end
+
+function Enemy:draw()
+    local pos = self.coords:clone():sub(self.source.coords):add(self.source.pos)
+    local x,y
+    x = inbound(pos.x, 1, wall.width)
+    y = inbound(pos.y, 1, wall.height)
+    local color = self.color
+    if pos.x ~= x or pos.y ~= y then
+        color = self.away_color
+    end
+    wall:pixel(floor(x-1), floor(y-1), color)
+end
 
 
 --------------------------------------------------------------------------------
@@ -314,6 +344,10 @@ function update()
         target:update()
     end
 
+    for _, enemy in ipairs(env.enemys or {}) do
+        enemy:update()
+    end
+
     tick = tick + 1
 end
 
@@ -331,6 +365,10 @@ function draw()
         target:draw()
     end
 
+    for _, enemy in ipairs(env.enemys or {}) do
+        enemy:draw()
+    end
+
     env.player:draw()
 
 end
@@ -338,7 +376,7 @@ end
 --------------------------------------------------------------------------------
 
 function love.load()
-    wall = Wall("176.99.24.251", 1338, 3, false) -- "176.99.24.251"
+    wall = Wall(false, 1338, 3, false) -- "176.99.24.251"
 
 --     __maxd = math.sqrt(wall.width*wall.height)
 
@@ -379,6 +417,14 @@ function love.load()
         source = env.player,
         x = 0,
         y = 0,
+    }
+
+    env.enemys = {}
+    env.enemys[1] = Enemy {
+        source = env.player,
+        x = 3,
+        y = 3,
+        dir = {x=-0.01, y=-0.01}
     }
 end
 
